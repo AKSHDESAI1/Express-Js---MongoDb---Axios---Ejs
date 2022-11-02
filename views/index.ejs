@@ -1,0 +1,123 @@
+<%- include("partials/header.ejs") %>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-8 offset-md-2">
+      <h3 class="text-center alert alert-primary mt-5" style="font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif">Notes App </h3>
+
+      <form id="form">
+        <div class="mb-3">
+          <label for="title" class="form-label"> <b>Title</b> </label>
+          <input type="text" class="form-control" id="title" required>
+        </div>
+        <div class="mb-3">
+          <label for="desc" class="form-label"> <b>Description</b></label>
+          <input type="text" class="form-control" id="desc" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </form>
+
+      <hr>
+
+      <div class="row" id="AllNotes">
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<script>
+  let AllNotes = document.getElementById("AllNotes");
+
+  //   Get Notes 
+  const getAllNotes = async () => {
+    const res = await axios.get("http://127.0.0.1:8000/getAllNotes");
+    console.log(res.data)
+    AllNotes.innerHTML = "";
+
+    if (res.data.message.length === 0) {
+      return AllNotes.innerHTML = "<h3> Create One Note to Preview </h3>";
+    }
+    res.data.message.map((item) => {
+      return AllNotes.innerHTML += ` <div class="col-md-4">
+          <div class="card" style="width: 18rem;">
+            <div class="card-body">
+              <h5 class="card-title">${item.title}</h5>
+              <p class="card-text">${item.desc}</p>
+              <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal${item._id}"> Update </a>
+              <a href="#" class="btn btn-danger" id=${item._id} onclick="deleteNote(this.id)"> Delete </a>
+            </div>
+          </div>
+        </div>
+        
+        
+        
+        
+        
+        <div class="modal fade" id="exampleModal${item._id}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="exampleModalLabel">Notes</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+        <div class="mb-3">
+          <label for="title" class="form-label"> <b>Title</b> </label>
+          <input type="text" class="form-control" value="${item.title}" id="title${item._id}" required>
+        </div>
+        <div class="mb-3">
+          <label for="desc" class="form-label"> <b>Description</b></label>
+          <input type="text" class="form-control" value="${item.desc}" id="desc${item._id}" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id=${item._id}  data-bs-dismiss="modal" onclick="updateNote(this.id)">Update</button>
+    
+
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    })
+  };
+
+
+  //    Insert Note
+  document.getElementById("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const res = await axios.post("http://127.0.0.1:8000/insertNote", {
+      title: document.getElementById("title").value,
+      desc: document.getElementById("desc").value
+    });
+
+    document.getElementById("title").value = "";
+    document.getElementById("desc").value = "";
+    getAllNotes();
+  })
+
+
+  //   Update Note#$
+  const updateNote = async (e) => {
+    const res = await axios.put(`http://127.0.0.1:8000/updateNote/${e}`, {
+        title: document.getElementById(`title${e}`).value,
+        desc: document.getElementById(`desc${e}`).value,
+    })
+
+    getAllNotes();
+  };
+
+  //   Delete Note
+  const deleteNote = async (e) => {
+    const res = await axios.delete(`http://127.0.0.1:8000/deleteNote/${e}`);
+    getAllNotes();
+  }
+
+  getAllNotes();
+</script>
+<%- include("partials/footer.ejs") %>
